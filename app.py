@@ -45,7 +45,7 @@ if question:
         score  = get_field(hit, "score", "similarity", "distance", default=0.0)
         candidates.append({
             "clause_id": cid,
-            "clause_text": text,
+            "clause_text": str(text),
             "initial_score": score
         })
 
@@ -59,7 +59,7 @@ if question:
     st.subheader("Search Results")
     for idx, item in enumerate(results, start=1):
         cid          = item["clause_id"]
-        clause_text  = item["clause_text"]
+        clause_text  = str(item["clause_text"])
         init_score   = item["initial_score"] or 0.0
         rerank_score = item.get("rerank_score")
 
@@ -85,20 +85,50 @@ if question:
             FEEDBACK_PATH.write_text(json.dumps(feedback_list, indent=2))
             st.success("Thanks for your feedback!")
 
+    # # --- Enhanced Section: Select & Preview One Clause ---
+    # st.subheader("Explain One of the Above Clauses")
+    # if results:
+    #     options = []
+    #     for item in results:
+    #         clause_id = item.get("clause_id", "N/A")
+    #         raw_text = item.get("clause_text", "")
+    #         text = str(raw_text)
+    #         snippet = text[:80] + ("…" if len(text) > 80 else "")
+    #         options.append(f"{clause_id}: {snippet}")
+
+    #     choice = st.selectbox("Choose a clause to explain:", options, key="sel_clause")
+
+    #     selected_id   = choice.split(":")[0]
+    #     selected_text = next(
+    #         str(item["clause_text"]) for item in results if item["clause_id"] == selected_id
+    #     )
+    #     st.markdown("**Selected Clause Preview:**")
+    #     st.write(selected_text)
+
+    #     if st.button("Explain Selected Clause", key="explain_sel_clause"):
+    #         with st.spinner("Generating explanation…"):
+    #             explanation = explain_with_perplexity(selected_text)
+    #         st.markdown(f"### 🧾 Explanation for {selected_id}")
+    #         st.code(selected_text)
+    #         st.write(explanation)
+    # else:
+    #     st.info("No clauses to select. Ask a question to see results.")
     # --- Enhanced Section: Select & Preview One Clause ---
     st.subheader("Explain One of the Above Clauses")
     if results:
-        options = [
-            f"{item['clause_id']}: {item['clause_text'][:80]}"
-            + ("…" if len(item['clause_text']) > 80 else "")
-            for item in results
-        ]
+        options = []
+        for item in results:
+            raw_text = item.get("clause_text", "")
+            text = str(raw_text)
+            snippet = text[:80] + ("…" if len(text) > 80 else "")
+            options.append(snippet)
+
         choice = st.selectbox("Choose a clause to explain:", options, key="sel_clause")
 
-        selected_id   = choice.split(":")[0]
-        selected_text = next(
-            item["clause_text"] for item in results if item["clause_id"] == selected_id
-        )
+        selected_index = options.index(choice)
+        selected_text = str(results[selected_index]["clause_text"])
+        selected_id = results[selected_index]["clause_id"]
+
         st.markdown("**Selected Clause Preview:**")
         st.write(selected_text)
 
@@ -144,10 +174,13 @@ if contract_text.strip():
     st.success(f"Extracted {len(clause_blocks)} clauses from your contract")
 
     # Select one clause to explain
-    clause_options = [
-        f"{blk['id']}: {blk['text'][:80]}…"
-        for blk in clause_blocks
-    ]
+    clause_options = []
+    for blk in clause_blocks:
+        clause_id = blk.get("id", "N/A")
+        clause_text = str(blk.get("text", ""))
+        snippet = clause_text[:80] + ("…" if len(clause_text) > 80 else "")
+        clause_options.append(f"{clause_id}: {snippet}")
+
     sel_option = st.selectbox(
         "Choose a clause to explain:", clause_options, key="upload_sel_clause"
     )
@@ -155,7 +188,7 @@ if contract_text.strip():
     if st.button("Explain Selected Clause", key="explain_upload_clause"):
         sel_id   = sel_option.split(":")[0]
         sel_text = next(
-            blk["text"] for blk in clause_blocks if blk["id"] == sel_id
+            str(blk["text"]) for blk in clause_blocks if blk["id"] == sel_id
         )
         with st.spinner(f"Generating explanation for {sel_id}…"):
             explanation = explain_with_perplexity(sel_text)
@@ -167,11 +200,11 @@ if contract_text.strip():
     # Option to explain all clauses
     if st.button("Explain All Clauses", key="explain_all_clauses"):
         for blk in clause_blocks:
+            clause_text = str(blk.get("text", ""))
             with st.spinner(f"Explaining {blk['id']}…"):
-                explanation = explain_with_perplexity(blk["text"])
+                explanation = explain_with_perplexity(clause_text)
             st.markdown(f"### 🧾 Explanation for Clause {blk['id']}")
-            st.code(blk["text"])
+            st.code(clause_text)
             st.write(explanation)
 else:
     st.info("Upload a file or paste text above to parse and search its clauses.")
-
