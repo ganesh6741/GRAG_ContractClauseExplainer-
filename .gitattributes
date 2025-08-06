@@ -1,0 +1,8 @@
+﻿# Track large data files via Git LFS
+data/clauses.json           filter=lfs diff=lfs merge=lfs -text
+data/faiss_index.idx        filter=lfs diff=lfs merge=lfs -text
+data/clause_embeddings.npy  filter=lfs diff=lfs merge=lfs -text
+data/clauses.json filter=lfs diff=lfs merge=lfs -text
+data/faiss_index.idx filter=lfs diff=lfs merge=lfs -text
+data/clause_embeddings.npy filter=lfs diff=lfs merge=lfs -text
+data/embeddings.pkl filter=lfs diff=lfs merge=lfs -text

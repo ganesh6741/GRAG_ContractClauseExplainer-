@@ -1,0 +1,19 @@
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+grag_cce/
+venv/
+
+# Logs and feedback (local-only)
+*.log
+feedback_log.json
+
+# OS and editor junk
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Streamlit local config
+.streamlit/secrets.toml
